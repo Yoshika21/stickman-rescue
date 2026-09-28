@@ -34,8 +34,8 @@ jobs:
 
       - name: Install Haxelibs via HMM
         run: |
-          haxelib install hmm --quiet
-          haxelib run hmm setup
+          haxelib install hmm
+          haxelib run hmm setup --yes
           haxelib run hmm install
 
       - name: Compile for Windows (C++)
@@ -53,6 +53,8 @@ jobs:
       - name: Setup Android SDK
         if: matrix.platform == 'android'
         uses: android-actions/setup-android@v3
+        with:
+          packages: 'platforms;android-33 build-tools;33.0.2 platform-tools'
 
       - name: Compile for Android (APK)
         if: matrix.platform == 'android'
@@ -86,5 +88,5 @@ jobs:
         uses: actions/upload-artifact@v4
         with:
           name: StickmanRescue-Android-Release
-          path: StickmanRescue-Android-Release.zip
+          path: StickmanRescue-Android.zip
           
