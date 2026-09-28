@@ -1,0 +1,33 @@
+<?xml version="1.0" encoding="utf-8"?>
+<project>
+	<!-- Informações da Aplicação -->
+	<app title="Stickman Rescue" file="StickmanGame" main="Main" version="1.0.0" company="Anthonygaemes" />
+
+	<!-- Resolução Nao-Escalada (1280x720 @ 60 FPS) -->
+	<window width="1280" height="720" fps="60" hardware="true" vsync="true" />
+
+	<!-- Janela sem borda para Desktop/Windows -->
+	<window if="windows" borderless="true" resizable="false" />
+
+	<!-- Caminhos de Pastas -->
+	<source path="source" />
+	<assets path="assets" />
+
+	<!-- Bibliotecas HaxeFlixel Core -->
+	<haxelib name="lime" />
+	<haxelib name="openfl" />
+	<haxelib name="flixel" />
+	<haxelib name="flixel-addons" />
+	<haxelib name="flixel-ui" />
+	<haxelib name="tjson" />
+
+	<!-- Dependências de C++ e Debug (Desktop) -->
+	<haxelib name="hxcpp" if="desktop" />
+	<haxelib name="hxcpp-debug-server" if="debug" />
+	<haxelib name="hmm" />
+
+	<!-- Integração do Discord RPC (apenas em compilações Windows / Desktop C++) -->
+	<haxelib name="hxdiscord_rpc" if="windows" />
+	<haxedef name="DISCORD_ALLOWED" if="windows" />
+	<haxedef name="mobile" if="android" />
+</project>
