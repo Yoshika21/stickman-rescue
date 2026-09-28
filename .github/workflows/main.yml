@@ -34,9 +34,10 @@ jobs:
 
       - name: Install Haxelibs via HMM
         run: |
+          haxelib setup
           haxelib install hmm
-          haxelib run hmm setup --yes
           haxelib run hmm install
+          haxelib fixrepo
 
       - name: Compile for Windows (C++)
         if: matrix.platform == 'windows'
@@ -72,7 +73,6 @@ jobs:
         if: matrix.platform == 'android'
         run: |
           mkdir build_zip_android
-          # O APK gerado geralmente fica em export/android/bin/app/build/outputs/apk/release/
           xcopy export\android\bin\app\build\outputs\apk\release\*.apk build_zip_android /I
           powershell Compress-Archive -Path build_zip_android\* -DestinationPath StickmanRescue-Android.zip
 
