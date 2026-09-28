@@ -34,7 +34,7 @@ jobs:
 
       - name: Install Haxelibs via HMM
         run: |
-          haxelib setup
+          haxelib setup /opt/hostedtoolcache/haxe/4.3.7/x64/lib
           haxelib install hmm
           haxelib run hmm install
           haxelib fixrepo
