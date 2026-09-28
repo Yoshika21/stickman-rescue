@@ -1,0 +1,90 @@
+name: Build Stickman Rescue
+
+on:
+  push:
+    branches: [ "main" ]
+  pull_request:
+    branches: [ "main" ]
+  workflow_dispatch:
+
+jobs:
+  build:
+    name: Build (${{ matrix.os }})
+    runs-on: ${{ matrix.os }}
+    
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - os: windows-latest
+            platform: windows
+            artifact_name: StickmanRescue-Windows
+          - os: ubuntu-latest
+            platform: android
+            artifact_name: StickmanRescue-Android
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v4
+
+      - name: Setup Haxe
+        uses: krdlab/setup-haxe@v1
+        with:
+          haxe-version: 4.3.7
+
+      - name: Install Haxelibs via HMM
+        run: |
+          haxelib install hmm --quiet
+          haxelib run hmm setup
+          haxelib run hmm install
+
+      - name: Compile for Windows (C++)
+        if: matrix.platform == 'windows'
+        run: |
+          haxelib run lime build windows -release
+
+      - name: Setup Java (Required for Android)
+        if: matrix.platform == 'android'
+        uses: actions/setup-java@v4
+        with:
+          distribution: 'temurin'
+          java-version: '17'
+
+      - name: Setup Android SDK
+        if: matrix.platform == 'android'
+        uses: android-actions/setup-android@v3
+
+      - name: Compile for Android (APK)
+        if: matrix.platform == 'android'
+        run: |
+          haxelib run lime build android -release
+
+      - name: Prepare Windows Artifact (ZIP)
+        if: matrix.platform == 'windows'
+        run: |
+          mkdir build_zip
+          xcopy export\windows\bin build_zip /E /I /H
+          powershell Compress-Archive -Path build_zip\* -DestinationPath StickmanRescue-Windows.zip
+
+      - name: Prepare Android Artifact (ZIP)
+        if: matrix.platform == 'android'
+        run: |
+          mkdir build_zip_android
+          # O APK gerado geralmente fica em export/android/bin/app/build/outputs/apk/release/
+          xcopy export\android\bin\app\build\outputs\apk\release\*.apk build_zip_android /I
+          powershell Compress-Archive -Path build_zip_android\* -DestinationPath StickmanRescue-Android.zip
+
+      - name: Upload Windows Release ZIP
+        if: matrix.platform == 'windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: StickmanRescue-Windows-Release
+          path: StickmanRescue-Windows.zip
+
+      - name: Upload Android Release ZIP
+        if: matrix.platform == 'android'
+        uses: actions/upload-artifact@v4
+        with:
+          name: StickmanRescue-Android-Release
+          path: StickmanRescue-Android-Release.zip
+          
