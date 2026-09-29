@@ -34,16 +34,14 @@ jobs:
 
       - name: Install Haxelibs
         run: |
-          haxelib install flixel 5.9.0
-          haxelib install flixel-ui
-          haxelib install flixel-addons 3.3.1
-          haxelib install tjson
-          haxelib install flixel-tools
-          haxelib install openfl 9.4.1
-          haxelib install lime 8.2.2
+          haxelib install flixel 5.9.0 --always
+          haxelib install flixel-ui --always
+          haxelib install flixel-addons 3.3.1 --always
+          haxelib install tjson --always
+          haxelib install flixel-tools --always
+          haxelib install openfl 9.4.1 --always
+          haxelib install lime 8.2.2 --always
           haxelib git hxdiscord_rpc https://github.com/MAJigsaw77/hxdiscord_rpc
-          haxelib install hxcpp
-          haxelib install hxccp-debug-server
 
       - name: Hxcpp for Android compiling
         if: matrix.platform == 'android'
