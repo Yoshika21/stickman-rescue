@@ -40,7 +40,7 @@ jobs:
           haxelib install tjson
           haxelib install flixel-tools
           haxelib install openfl 9.4.1
-          haxelib isntall lime 8.2.2
+          haxelib install lime 8.2.2
           haxelib git hxdiscord_rpc https://github.com/MAJigsaw77/hxdiscord_rpc 
           
 
