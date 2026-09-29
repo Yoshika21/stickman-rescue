@@ -9,9 +9,9 @@ on:
 
 jobs:
   build:
-    name: Build (${{ matrix.os }})
+    name: Build (${{ matrix.platform }})
     runs-on: ${{ matrix.os }}
-    
+
     strategy:
       fail-fast: false
       matrix:
@@ -19,6 +19,7 @@ jobs:
           - os: windows-latest
             platform: windows
             artifact_name: StickmanRescue-Windows
+
           - os: ubuntu-latest
             platform: android
             artifact_name: StickmanRescue-Android
@@ -43,26 +44,27 @@ jobs:
           haxelib install lime 8.2.2 --always
           haxelib git hxdiscord_rpc https://github.com/MAJigsaw77/hxdiscord_rpc
 
-      - name: Hxcpp for Android compiling
+      - name: Setup hxcpp for Android
         if: matrix.platform == 'android'
+        shell: bash
         run: |
           curl -L -o hxcpp.zip https://github.com/HaxeFoundation/hxcpp/releases/download/v4.3.45/hxcpp-4.3.45.zip
           haxelib install hxcpp.zip
           haxelib set hxcpp 4.3.45
-          
 
-      - name: Compile for Windows (C++)
+      - name: Compile for Windows
         if: matrix.platform == 'windows'
+        shell: powershell
         run: |
           haxelib run lime build windows -release
 
-      - name: Setup Java (Required for Android)
+      - name: Setup Java
         if: matrix.platform == 'android'
         uses: actions/setup-java@v5
         with:
-          distribution: 'temurin'
+          distribution: temurin
           java-version: '17'
-          
+
       - name: Setup Android SDK and NDK
         if: matrix.platform == 'android'
         uses: android-actions/setup-android@v3
@@ -76,6 +78,10 @@ jobs:
           export ANDROID_SDK="$ANDROID_HOME"
           export ANDROID_NDK_ROOT="$ANDROID_HOME/ndk/25.1.8937393"
 
+          echo "ANDROID_SDK=$ANDROID_SDK" >> "$GITHUB_ENV"
+          echo "ANDROID_SDK_ROOT=$ANDROID_SDK" >> "$GITHUB_ENV"
+          echo "ANDROID_NDK_ROOT=$ANDROID_NDK_ROOT" >> "$GITHUB_ENV"
+
           haxelib run lime setup android -- \
             --ANDROID_SDK "$ANDROID_SDK" \
             --ANDROID_NDK_DIR "$ANDROID_NDK_ROOT" \
@@ -85,56 +91,70 @@ jobs:
           haxelib run lime config ANDROID_NDK_ROOT "$ANDROID_NDK_ROOT"
           haxelib run lime config JAVA_HOME "$JAVA_HOME"
           haxelib run lime config ANDROID_SETUP true
-          
-      - name: Compile for Android (APK)
+
+      - name: Compile for Android
         if: matrix.platform == 'android'
         shell: bash
         run: |
           haxelib run lime build android -release
 
-      - name: Prepare Android Artifact (ZIP)
-        if: matrix.platform == 'android'
-        shell: bash
-        run: |
-          mkdir -p build_zip_android
-          find export/android -name "*.apk" -exec cp {} build_zip_android/ \;
-          zip -r StickmanRescue-Android.zip build_zip_android
-
-      - name: Upload Android Release ZIP
-        if: matrix.platform == 'android'
-        uses: actions/upload-artifact@v4
-        with:
-          name: StickmanRescue-Android-Release
-          path: "${{ github.workspace }}/StickmanRescue-Android.zip"
-          if-no-files-found: error
-
-      - name: Prepare Windows Artifact (ZIP)
+      - name: Prepare Windows Artifact
         if: matrix.platform == 'windows'
         shell: powershell
         run: |
-          New-Item -ItemType Directory -Force -Path build_zip
-          Copy-Item -Path "export\windows\bin\*" -Destination "build_zip" -Recurse -Force
-          Compress-Archive -Path "build_zip\*" -DestinationPath "StickmanRescue-Windows.zip" -Force
+          if (!(Test-Path "export\windows\bin")) {
+            Write-Error "Pasta export\windows\bin não foi encontrada."
+            exit 1
+          }
 
-      - name: Upload Windows Release ZIP
-        if: matrix.platform == 'windows'
-        uses: actions/upload-artifact@v4
-        with:
-          name: StickmanRescue-Windows-Release
-          path: "${{ github.workspace }}\StickmanRescue-Windows.zip"
-          if-no-files-found: error
+          New-Item -ItemType Directory -Force -Path "build_zip" | Out-Null
 
-      - name: Upload Windows Release ZIP
+          Copy-Item `
+            -Path "export\windows\bin\*" `
+            -Destination "build_zip" `
+            -Recurse `
+            -Force
+
+          Compress-Archive `
+            -Path "build_zip\*" `
+            -DestinationPath "StickmanRescue-Windows.zip" `
+            -Force
+
+          Write-Host "Windows ZIP criado:"
+          Get-Item "StickmanRescue-Windows.zip"
+
+      - name: Prepare Android Artifact
+        if: matrix.platform == 'android'
+        shell: bash
+        run: |
+          if [ ! -d "export/android/bin" ]; then
+            echo "Pasta export/android/bin não foi encontrada."
+            exit 1
+          fi
+
+          mkdir -p build_zip_android
+
+          cp -r export/android/bin/* build_zip_android/
+
+          zip -r StickmanRescue-Android.zip build_zip_android
+
+          echo "Android ZIP criado:"
+          ls -lh StickmanRescue-Android.zip
+
+      - name: Upload Windows Release
         if: matrix.platform == 'windows'
         uses: actions/upload-artifact@v4
         with:
           name: StickmanRescue-Windows-Release
           path: StickmanRescue-Windows.zip
+          if-no-files-found: error
+          retention-days: 7
 
-      - name: Upload Android Release ZIP
+      - name: Upload Android Release
         if: matrix.platform == 'android'
         uses: actions/upload-artifact@v4
         with:
           name: StickmanRescue-Android-Release
           path: StickmanRescue-Android.zip
-          
+          if-no-files-found: error
+          retention-days: 7
