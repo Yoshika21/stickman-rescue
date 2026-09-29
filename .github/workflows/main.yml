@@ -66,10 +66,10 @@ jobs:
       - name: Compile for Android (APK)
         if: matrix.platform == 'android'
         env:
+          ANDROID_SDK: ${{ steps.setup-android.outputs.sdk-output }}
           ANDROID_SDK_ROOT: ${{ steps.setup-android.outputs.sdk-output }}
           ANDROID_NDK_ROOT: ${{ steps.setup-android.outputs.ndk-output }}
         run: |
-          haxelib run lime setup android
           haxelib run lime build android -release
 
       - name: Prepare Windows Artifact (ZIP)
