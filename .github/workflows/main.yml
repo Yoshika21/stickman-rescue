@@ -98,47 +98,61 @@ jobs:
         run: |
           haxelib run lime build android -release
 
+
       - name: Prepare Windows Artifact
         if: matrix.platform == 'windows'
         shell: powershell
         run: |
-          if (!(Test-Path "export\windows\bin")) {
-            Write-Error "Pasta export\windows\bin não foi encontrada."
+          $exportDir = "export\windows"
+
+          if (!(Test-Path $exportDir)) {
+            Write-Error "Pasta export\windows não foi encontrada. Verifique se a compilação foi concluída."
+            Get-ChildItem export -Recurse -ErrorAction SilentlyContinue
             exit 1
           }
 
-          New-Item -ItemType Directory -Force -Path "build_zip" | Out-Null
+          $exe = Get-ChildItem $exportDir -Filter "*.exe" -Recurse |
+            Select-Object -First 1
 
-          Copy-Item `
-            -Path "export\windows\bin\*" `
-            -Destination "build_zip" `
-            -Recurse `
-            -Force
+          if (!$exe) {
+            Write-Error "Nenhum arquivo .exe foi encontrado em export\windows."
+            Get-ChildItem $exportDir -Recurse
+            exit 1
+          }
+
+          $outputDir = $exe.DirectoryName
+
+          Write-Host "Executável encontrado: $($exe.FullName)"
+          Write-Host "Pasta do jogo: $outputDir"
 
           Compress-Archive `
-            -Path "build_zip\*" `
+            -Path "$outputDir\*" `
             -DestinationPath "StickmanRescue-Windows.zip" `
             -Force
 
-          Write-Host "Windows ZIP criado:"
           Get-Item "StickmanRescue-Windows.zip"
 
       - name: Prepare Android Artifact
         if: matrix.platform == 'android'
         shell: bash
         run: |
-          if [ ! -d "export/android/bin" ]; then
-            echo "Pasta export/android/bin não foi encontrada."
+          APK=$(find export/android -type f -name "*.apk" -print -quit)
+
+          if [ -z "$APK" ]; then
+            echo "Nenhum APK foi encontrado em export/android."
+            find export/android -maxdepth 6 -type f
             exit 1
           fi
 
+          echo "APK encontrado: $APK"
+
           mkdir -p build_zip_android
+          cp "$APK" build_zip_android/
 
-          cp -r export/android/bin/* build_zip_android/
+          cd build_zip_android
+          zip ../StickmanRescue-Android.zip *.apk
+          cd ..
 
-          zip -r StickmanRescue-Android.zip build_zip_android
-
-          echo "Android ZIP criado:"
           ls -lh StickmanRescue-Android.zip
 
       - name: Upload Windows Release
