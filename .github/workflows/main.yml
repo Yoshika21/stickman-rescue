@@ -41,7 +41,16 @@ jobs:
           haxelib install flixel-tools
           haxelib install openfl 9.4.1
           haxelib install lime 8.2.2
-          haxelib git hxdiscord_rpc https://github.com/MAJigsaw77/hxdiscord_rpc 
+          haxelib git hxdiscord_rpc https://github.com/MAJigsaw77/hxdiscord_rpc
+          haxelib install hxcpp
+          haxelib install hxccp-debug-server
+
+      - name: Hxcpp for Android compiling
+        if: matrix.platform == 'android'
+        run: |
+          curl -L -o hxcpp.zip https://github.com/HaxeFoundation/hxcpp/releases/download/v4.3.45/hxcpp-4.3.45.zip
+          haxelib install hxcpp.zip
+          haxelib set hxcpp 4.3.45
           
 
       - name: Compile for Windows (C++)
