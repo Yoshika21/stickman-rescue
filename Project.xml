@@ -24,7 +24,6 @@
 	<!-- Dependências de C++ e Debug (Desktop) -->
 	<haxelib name="hxcpp" if="desktop" />
 	<haxelib name="hxcpp-debug-server" if="debug" />
-	<haxelib name="hmm" />
 
 	<!-- Integração do Discord RPC (apenas em compilações Windows / Desktop C++) -->
 	<haxelib name="hxdiscord_rpc" if="windows" />
