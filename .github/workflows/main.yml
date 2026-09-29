@@ -56,15 +56,20 @@ jobs:
           distribution: 'temurin'
           java-version: '17'
 
-      - name: Setup Android SDK
+      - name: Setup Android SDK and NDK
         if: matrix.platform == 'android'
+        id: setup-android
         uses: android-actions/setup-android@v3
         with:
-          packages: 'platforms;android-33 build-tools;33.0.2 platform-tools'
+          packages: 'platforms;android-33 build-tools;33.0.2 platform-tools ndk;25.1.8937393'
 
       - name: Compile for Android (APK)
         if: matrix.platform == 'android'
+        env:
+          ANDROID_SDK_ROOT: ${{ steps.setup-android.outputs.sdk-output }}
+          ANDROID_NDK_ROOT: ${{ steps.setup-android.outputs.ndk-output }}
         run: |
+          haxelib run lime setup android
           haxelib run lime build android -release
 
       - name: Prepare Windows Artifact (ZIP)
