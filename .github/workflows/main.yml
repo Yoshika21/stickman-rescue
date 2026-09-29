@@ -91,21 +91,38 @@ jobs:
         shell: bash
         run: |
           haxelib run lime build android -release
-          
-
-      - name: Prepare Windows Artifact (ZIP)
-        if: matrix.platform == 'windows'
-        run: |
-          mkdir build_zip
-          xcopy export\windows\bin build_zip /E /I /H
-          powershell Compress-Archive -Path build_zip\* -DestinationPath StickmanRescue-Windows.zip
 
       - name: Prepare Android Artifact (ZIP)
         if: matrix.platform == 'android'
+        shell: bash
         run: |
-          mkdir build_zip_android
-          xcopy export\android\bin\app\build\outputs\apk\release\*.apk build_zip_android /I
-          powershell Compress-Archive -Path build_zip_android\* -DestinationPath StickmanRescue-Android.zip
+          mkdir -p build_zip_android
+          find export/android -name "*.apk" -exec cp {} build_zip_android/ \;
+          zip -r StickmanRescue-Android.zip build_zip_android
+
+      - name: Upload Android Release ZIP
+        if: matrix.platform == 'android'
+        uses: actions/upload-artifact@v4
+        with:
+          name: StickmanRescue-Android-Release
+          path: "${{ github.workspace }}/StickmanRescue-Android.zip"
+          if-no-files-found: error
+
+      - name: Prepare Windows Artifact (ZIP)
+        if: matrix.platform == 'windows'
+        shell: powershell
+        run: |
+          New-Item -ItemType Directory -Force -Path build_zip
+          Copy-Item -Path "export\windows\bin\*" -Destination "build_zip" -Recurse -Force
+          Compress-Archive -Path "build_zip\*" -DestinationPath "StickmanRescue-Windows.zip" -Force
+
+      - name: Upload Windows Release ZIP
+        if: matrix.platform == 'windows'
+        uses: actions/upload-artifact@v4
+        with:
+          name: StickmanRescue-Windows-Release
+          path: "${{ github.workspace }}\StickmanRescue-Windows.zip"
+          if-no-files-found: error
 
       - name: Upload Windows Release ZIP
         if: matrix.platform == 'windows'
