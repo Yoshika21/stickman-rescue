@@ -98,21 +98,39 @@ jobs:
         run: |
           haxelib run lime build android -release
 
-      - name: Debug Android Output
+      - name: Prepare Android Artifact
         if: matrix.platform == 'android'
         shell: bash
         run: |
-          echo "=== Diretório atual ==="
-          pwd
+          APK=$(find export/android -type f -iname "*.apk" -print -quit)
 
-          echo "=== Arquivos na raiz ==="
-          ls -la
+          if [ -z "$APK" ]; then
+            echo "Nenhum APK encontrado em export/android."
+            echo "Arquivos encontrados:"
+            find export/android -type f -print || true
+            exit 1
+          fi
 
-          echo "=== Procurando arquivos gerados ==="
-          find . -maxdepth 8 -type f \( -name "*.apk" -o -name "*.aab" -o -name "*.so" \) -print || true
+          echo "APK encontrado: $APK"
 
-          echo "=== Procurando pastas export ==="
-          find . -maxdepth 5 -type d -name "export" -print || true
+          mkdir -p build_zip_android
+          cp "$APK" build_zip_android/
+
+          cd build_zip_android
+          zip ../StickmanRescue-Android.zip ./*.apk
+          cd ..
+
+          echo "Android ZIP criado:"
+          ls -lh StickmanRescue-Android.zip
+
+      - name: Upload Android Release
+        if: matrix.platform == 'android'
+        uses: actions/upload-artifact@v4
+        with:
+          name: StickmanRescue-Android-Release
+          path: StickmanRescue-Android.zip
+          if-no-files-found: error
+          retention-days: 7
 
       - name: Prepare Windows Artifact
         if: matrix.platform == 'windows'
