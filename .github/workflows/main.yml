@@ -114,23 +114,40 @@ jobs:
           echo "=== Procurando pastas export ==="
           find . -maxdepth 5 -type d -name "export" -print || true
 
-      - name: Debug Windows Output
+      - name: Prepare Windows Artifact
         if: matrix.platform == 'windows'
         shell: powershell
         run: |
-          Write-Host "=== Diretório atual ==="
-          Get-Location
+          $buildDir = "bin\windows\bin"
 
-          Write-Host "=== Arquivos na raiz ==="
-          Get-ChildItem -Force
+          if (!(Test-Path $buildDir)) {
+            Write-Error "Pasta $buildDir não foi encontrada."
+            exit 1
+          }
 
-          Write-Host "=== Procurando EXE ==="
-          Get-ChildItem -Path . -Recurse -Filter *.exe -ErrorAction SilentlyContinue |
-            Select-Object -ExpandProperty FullName
+          if (!(Test-Path "$buildDir\StickmanGame.exe")) {
+            Write-Error "StickmanGame.exe não foi encontrado."
+            Get-ChildItem -Path "bin\windows" -Recurse -File
+            exit 1
+          }
 
-          Write-Host "=== Procurando pasta export ==="
-          Get-ChildItem -Path . -Recurse -Directory -Filter export -ErrorAction SilentlyContinue |
-            Select-Object -ExpandProperty FullName
+          Write-Host "Build encontrado em: $buildDir"
+
+          New-Item -ItemType Directory -Force -Path "build_zip_windows" | Out-Null
+
+          Copy-Item `
+            -Path "$buildDir\*" `
+            -Destination "build_zip_windows" `
+            -Recurse `
+            -Force
+
+          Compress-Archive `
+            -Path "build_zip_windows\*" `
+            -DestinationPath "StickmanRescue-Windows.zip" `
+            -Force
+
+          Write-Host "ZIP criado:"
+          Get-Item "StickmanRescue-Windows.zip"
 
       - name: Upload Windows Release
         if: matrix.platform == 'windows'
