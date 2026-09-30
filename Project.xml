@@ -1,9 +1,10 @@
 <?xml version="1.0" encoding="utf-8"?>
 <project>
+
 	<!-- Informações da Aplicação -->
 	<app title="Stickman Rescue" file="StickmanGame" main="Main" version="1.0.0" company="Anthonygaemes" />
 
-	<!-- Resolução Nao-Escalada (1280x720 @ 60 FPS) -->
+	<!-- Resolução Não-Escalada (1280x720 @ 60 FPS) -->
 	<window width="1280" height="720" fps="60" hardware="true" vsync="true" />
 
 	<!-- Janela sem borda para Desktop/Windows -->
@@ -12,6 +13,18 @@
 	<!-- Caminhos de Pastas -->
 	<source path="source" />
 	<assets path="assets" />
+
+	<!-- Diretórios dos builds -->
+	<config:windows output-directory="windows" />
+	<config:android output-directory="android" />
+
+	<!-- Ícones -->
+	<icon path="setup/art/icon16.png" size="16" />
+	<icon path="setup/art/icon32.png" size="32" />
+	<icon path="setup/art/icon64.png" size="64" />
+	<icon path="setup/art/icon128.png" size="128" />
+	<icon path="setup/art/icon256.png" size="256" />
+	<icon path="setup/art/iconOG.png" />
 
 	<!-- Bibliotecas HaxeFlixel Core -->
 	<haxelib name="lime" />
@@ -25,8 +38,11 @@
 	<haxelib name="hxcpp" if="desktop" />
 	<haxelib name="hxcpp-debug-server" if="debug" />
 
-	<!-- Integração do Discord RPC (apenas em compilações Windows / Desktop C++) -->
+	<!-- Integração do Discord RPC -->
 	<haxelib name="hxdiscord_rpc" if="windows" />
 	<haxedef name="DISCORD_ALLOWED" if="windows" />
+
+	<!-- Android -->
 	<haxedef name="mobile" if="android" />
+
 </project>
