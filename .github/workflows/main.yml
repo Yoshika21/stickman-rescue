@@ -98,62 +98,39 @@ jobs:
         run: |
           haxelib run lime build android -release
 
-
-      - name: Prepare Windows Artifact
-        if: matrix.platform == 'windows'
-        shell: powershell
-        run: |
-          $exportDir = "export\windows"
-
-          if (!(Test-Path $exportDir)) {
-            Write-Error "Pasta export\windows não foi encontrada. Verifique se a compilação foi concluída."
-            Get-ChildItem export -Recurse -ErrorAction SilentlyContinue
-            exit 1
-          }
-
-          $exe = Get-ChildItem $exportDir -Filter "*.exe" -Recurse |
-            Select-Object -First 1
-
-          if (!$exe) {
-            Write-Error "Nenhum arquivo .exe foi encontrado em export\windows."
-            Get-ChildItem $exportDir -Recurse
-            exit 1
-          }
-
-          $outputDir = $exe.DirectoryName
-
-          Write-Host "Executável encontrado: $($exe.FullName)"
-          Write-Host "Pasta do jogo: $outputDir"
-
-          Compress-Archive `
-            -Path "$outputDir\*" `
-            -DestinationPath "StickmanRescue-Windows.zip" `
-            -Force
-
-          Get-Item "StickmanRescue-Windows.zip"
-
-      - name: Prepare Android Artifact
+      - name: Debug Android Output
         if: matrix.platform == 'android'
         shell: bash
         run: |
-          APK=$(find export/android -type f -name "*.apk" -print -quit)
+          echo "=== Diretório atual ==="
+          pwd
 
-          if [ -z "$APK" ]; then
-            echo "Nenhum APK foi encontrado em export/android."
-            find export/android -maxdepth 6 -type f
-            exit 1
-          fi
+          echo "=== Arquivos na raiz ==="
+          ls -la
 
-          echo "APK encontrado: $APK"
+          echo "=== Procurando arquivos gerados ==="
+          find . -maxdepth 8 -type f \( -name "*.apk" -o -name "*.aab" -o -name "*.so" \) -print || true
 
-          mkdir -p build_zip_android
-          cp "$APK" build_zip_android/
+          echo "=== Procurando pastas export ==="
+          find . -maxdepth 5 -type d -name "export" -print || true
 
-          cd build_zip_android
-          zip ../StickmanRescue-Android.zip *.apk
-          cd ..
+      - name: Debug Windows Output
+        if: matrix.platform == 'windows'
+        shell: powershell
+        run: |
+          Write-Host "=== Diretório atual ==="
+          Get-Location
 
-          ls -lh StickmanRescue-Android.zip
+          Write-Host "=== Arquivos na raiz ==="
+          Get-ChildItem -Force
+
+          Write-Host "=== Procurando EXE ==="
+          Get-ChildItem -Path . -Recurse -Filter *.exe -ErrorAction SilentlyContinue |
+            Select-Object -ExpandProperty FullName
+
+          Write-Host "=== Procurando pasta export ==="
+          Get-ChildItem -Path . -Recurse -Directory -Filter export -ErrorAction SilentlyContinue |
+            Select-Object -ExpandProperty FullName
 
       - name: Upload Windows Release
         if: matrix.platform == 'windows'
